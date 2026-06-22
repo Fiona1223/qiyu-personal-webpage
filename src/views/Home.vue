@@ -2,17 +2,52 @@
 	<div id="qiyu-home">
 		<!-- 英雄区（沉浸式视觉核心） -->
 		<section class="hero">
-			<!-- 动态渐变背景 -->
+			<!-- 动态渐变背景（优化动画） -->
 			<div class="hero-bg"></div>
-			<!-- Canvas小鱼动画容器（替换原有小鱼容器） -->
+			<!-- Canvas小鱼动画容器 -->
 			<div id="jsi-flying-fish-container" class="fish-container" ref="fishContainer"></div>
-			<!-- 炫酷粒子装饰 -->
+			<!-- 炫酷粒子装饰（优化动画） -->
 			<div class="particles" ref="particles"></div>
-			<!-- 光效装饰 -->
+			<!-- 光效装饰（新增呼吸光效） -->
 			<div class="light-effect"></div>
+			<!-- 新增：流动光带装饰 -->
+			<div class="light-streak light-streak-1"></div>
+			<div class="light-streak light-streak-2"></div>
 
 			<div class="hero-container">
-				<!-- 左侧文字区（带打字机动画） -->
+				<!-- 左侧人物立牌滑动区（新增核心功能） -->
+				<div
+					class="character-standee-container"
+					ref="standeeContainer"
+					@wheel="handleStandeeScroll"
+				>
+					<div
+						class="standee-track"
+						:style="{ transform: `translateY(${-currentStandeeIndex * 100}%)` }"
+					>
+						<div
+							class="standee-item"
+							v-for="(item, index) in standeeImages"
+							:key="index"
+							:class="{ active: index === currentStandeeIndex }"
+						>
+							<img :src="item" alt="祁煜立牌" class="standee-img" />
+							<div class="standee-caption">{{ standeeCaptions[index] }}</div>
+						</div>
+					</div>
+					<!-- 滑动指示器 -->
+					<div class="standee-indicators">
+						<span
+							class="standee-dot"
+							v-for="(item, index) in standeeImages"
+							:key="index"
+							:class="{ active: index === currentStandeeIndex }"
+							@click="goToStandee(index)"
+						></span>
+					</div>
+				</div>
+
+				<!-- 中间文字区（优化动画） -->
 				<div class="hero-text" ref="heroText">
 					<h1 class="hero-title">
 						<span class="title-char">祁</span>
@@ -39,38 +74,40 @@
 					</div>
 				</div>
 
-				<!-- 右侧人物展示区（核心视觉）- 点击切换图片 -->
+				<!-- 右侧人物展示区（联动切换） -->
 				<div class="hero-image" ref="heroImage">
 					<div class="image-container">
-						<!-- 人物主体（带3D悬浮+点击切换效果） -->
-						<div class="character-wrapper" @click="switchCharacterImage">
+						<!-- 人物主体（优化3D悬浮+联动切换） -->
+						<div class="character-wrapper">
 							<img
-								:src="characterImages[currentImageIndex]"
+								:src="characterImages[currentStandeeIndex]"
 								alt="祁煜"
 								class="character-img"
 								:class="{ 'image-fade': isImageChanging }"
 							/>
-							<!-- 人物光效边框 -->
+							<!-- 优化人物光效边框 -->
 							<div class="character-border"></div>
+							<!-- 新增：动态光环 -->
+							<div class="character-ring"></div>
 							<!-- 人物光晕 -->
 							<div class="character-glow"></div>
-							<!-- 点击提示 -->
-							<div class="click-hint">点击切换形象</div>
+							<!-- 更新提示文字 -->
+							<div class="scroll-hint">滚动切换形象</div>
 						</div>
-						<!-- 动态装饰元素 -->
+						<!-- 优化动态装饰元素 -->
 						<div class="floating-decor"></div>
 					</div>
 				</div>
 			</div>
 
-			<!-- 滚动提示（更炫酷的动画） -->
+			<!-- 滚动提示（优化动画） -->
 			<div class="scroll-tip">
 				<span>向下探索</span>
 				<div class="scroll-icon"></div>
 			</div>
 		</section>
 
-		<!-- 轻量展示区（弱化功能，强化展示） -->
+		<!-- 轻量展示区（保持不变） -->
 		<section class="showcase-section" ref="showcaseSection">
 			<div class="section-container">
 				<!-- 极简标题 -->
@@ -80,7 +117,7 @@
 					<span class="title-line"></span>
 				</h2>
 
-				<!-- 1. 个人档案（极简展示） -->
+				<!-- 1. 个人档案 -->
 				<div class="profile-module">
 					<div class="profile-grid">
 						<div class="profile-item">
@@ -102,7 +139,7 @@
 					</div>
 				</div>
 
-				<!-- 2. 视觉展示模块（炫酷3D轮播） -->
+				<!-- 2. 视觉展示模块 -->
 				<div class="gallery-module">
 					<div class="carousel-container" ref="carouselContainer">
 						<!-- 轮播轨道 -->
@@ -148,7 +185,7 @@
 					</div>
 				</div>
 
-				<!-- 3. 引用展示（自动切换文字） -->
+				<!-- 3. 引用展示 -->
 				<div class="quote-module">
 					<div class="quote-content" ref="quoteContent">
 						<svg class="quote-icon" viewBox="0 0 24 24" fill="#7B61FF">
@@ -186,7 +223,16 @@
 					'https://picsum.photos/id/1014/800/800',
 					'https://picsum.photos/id/1025/800/800',
 				],
-				currentImageIndex: 0,
+				// 新增：人物立牌图片列表
+				standeeImages: [
+					'https://picsum.photos/id/1005/400/800',
+					'https://picsum.photos/id/1012/400/800',
+					'https://picsum.photos/id/1014/400/800',
+					'https://picsum.photos/id/1025/400/800',
+				],
+				// 立牌描述文字
+				standeeCaptions: ['深海焰火', '星夜幻想', '人鱼之约', '宇宙情书'],
+				currentStandeeIndex: 0,
 				isImageChanging: false,
 
 				// 轮播图片数据
@@ -251,7 +297,7 @@
 			// 初始化当前引用
 			this.currentQuote = this.quotes[0];
 
-			// 1. 初始化Canvas小鱼动画（替换原有小鱼动画）
+			// 1. 初始化Canvas小鱼动画
 			this.initFishRenderer();
 			// 2. 初始化粒子动画
 			this.createParticles();
@@ -287,17 +333,50 @@
 			if (this.quoteTimer) clearInterval(this.quoteTimer);
 		},
 		methods: {
-			// ========== 核心修改：Canvas小鱼动画实现（优化版） ==========
+			// ========== 核心新增：立牌滚动切换逻辑 ==========
+			handleStandeeScroll(e) {
+				e.preventDefault();
+
+				// 标记图片切换中
+				this.isImageChanging = true;
+
+				// 根据滚轮方向切换索引
+				if (e.deltaY > 0) {
+					// 向下滚动 - 下一张
+					this.currentStandeeIndex = (this.currentStandeeIndex + 1) % this.standeeImages.length;
+				} else {
+					// 向上滚动 - 上一张
+					this.currentStandeeIndex =
+						(this.currentStandeeIndex - 1 + this.standeeImages.length) % this.standeeImages.length;
+				}
+
+				// 动画结束后重置状态
+				setTimeout(() => {
+					this.isImageChanging = false;
+				}, 500);
+			},
+
+			// 点击指示器切换立牌
+			goToStandee(index) {
+				this.isImageChanging = true;
+				this.currentStandeeIndex = index;
+
+				setTimeout(() => {
+					this.isImageChanging = false;
+				}, 500);
+			},
+
+			// ========== Canvas小鱼动画实现（保持不变） ==========
 			initFishRenderer() {
 				const self = this;
 
-				// 定义小鱼渲染器 - 优化参数，降低波动和速度
+				// 定义小鱼渲染器
 				this.RENDERER = {
-					POINT_INTERVAL: 8, // 增加点间距，减少波动细节
-					FISH_COUNT: 5, // 减少鱼的数量，更简洁
-					MAX_INTERVAL_COUNT: 80, // 延长鱼的生成间隔
+					POINT_INTERVAL: 8,
+					FISH_COUNT: 5,
+					MAX_INTERVAL_COUNT: 80,
 					INIT_HEIGHT_RATE: 0.5,
-					THRESHOLD: 80, // 增大阈值，减少触发波动的范围
+					THRESHOLD: 80,
 					WATCH_INTERVAL: 300,
 
 					init: function () {
@@ -347,7 +426,6 @@
 						this.intervalCount = this.MAX_INTERVAL_COUNT;
 						this.width = this.$container.offsetWidth;
 						this.height = this.$container.offsetHeight;
-						// 根据容器大小调整鱼的数量（优化版）
 						this.fishCount = Math.max(
 							2,
 							Math.round((((this.FISH_COUNT * this.width) / 800) * this.height) / 800)
@@ -404,7 +482,6 @@
 						if (!this.axis) {
 							this.axis = axis;
 						}
-						// 降低鼠标移动触发的波动幅度
 						this.generateEpicenter(axis.x, axis.y, (axis.y - this.axis.y) * 0.3);
 						this.axis = axis;
 					},
@@ -444,7 +521,6 @@
 						requestAnimationFrame(this.render);
 						this.controlStatus();
 						this.context.clearRect(0, 0, this.width, this.height);
-						// 优化鱼的颜色，更柔和的紫色调
 						this.context.fillStyle = 'rgba(123, 97, 255, 0.6)';
 
 						for (var i = 0, count = this.fishes.length; i < count; i++) {
@@ -465,7 +541,7 @@
 					},
 				};
 
-				// 定义水面点类 - 优化参数，大幅降低水波幅度
+				// 定义水面点类
 				this.SURFACE_POINT = function (renderer, x) {
 					this.renderer = renderer;
 					this.x = x;
@@ -473,10 +549,10 @@
 				};
 
 				this.SURFACE_POINT.prototype = {
-					SPRING_CONSTANT: 0.01, // 降低弹簧常数，减少波动
-					SPRING_FRICTION: 0.95, // 增加摩擦力，更快衰减
-					WAVE_SPREAD: 0.15, // 降低波的传播速度
-					ACCELARATION_RATE: 0.003, // 降低加速度，减少波动幅度
+					SPRING_CONSTANT: 0.01,
+					SPRING_FRICTION: 0.95,
+					WAVE_SPREAD: 0.15,
+					ACCELARATION_RATE: 0.003,
 
 					init: function () {
 						this.initHeight = this.renderer.height * this.renderer.INIT_HEIGHT_RATE;
@@ -523,14 +599,14 @@
 					},
 				};
 
-				// 定义鱼类 - 优化参数，减慢鱼的速度
+				// 定义鱼类
 				this.FISH = function (renderer) {
 					this.renderer = renderer;
 					this.init();
 				};
 
 				this.FISH.prototype = {
-					GRAVITY: 0.15, // 降低重力，减少上下浮动
+					GRAVITY: 0.15,
 
 					init: function () {
 						this.direction = Math.random() < 0.5;
@@ -538,7 +614,6 @@
 							? this.renderer.width + this.renderer.THRESHOLD
 							: -this.renderer.THRESHOLD;
 						this.previousY = this.y;
-						// 大幅降低水平速度
 						this.vx = this.getRandomValue(1.5, 3.5) * (this.direction ? -1 : 1);
 
 						if (this.renderer.reverse) {
@@ -546,15 +621,15 @@
 								(this.renderer.height * 1) / 10,
 								(this.renderer.height * 4) / 10
 							);
-							this.vy = this.getRandomValue(0.5, 1.5); // 降低垂直速度
-							this.ay = this.getRandomValue(0.01, 0.05); // 降低加速度
+							this.vy = this.getRandomValue(0.5, 1.5);
+							this.ay = this.getRandomValue(0.01, 0.05);
 						} else {
 							this.y = this.getRandomValue(
 								(this.renderer.height * 6) / 10,
 								(this.renderer.height * 9) / 10
 							);
-							this.vy = this.getRandomValue(-1.5, -0.5); // 降低垂直速度
-							this.ay = this.getRandomValue(-0.05, -0.01); // 降低加速度
+							this.vy = this.getRandomValue(-1.5, -0.5);
+							this.ay = this.getRandomValue(-0.05, -0.01);
 						}
 						this.isOut = false;
 						this.theta = 0;
@@ -595,15 +670,15 @@
 							}
 						}
 						if (!this.isOut) {
-							this.theta += Math.PI / 60; // 减慢鱼鳍摆动速度
+							this.theta += Math.PI / 60;
 							this.theta %= Math.PI * 2;
-							this.phi += Math.PI / 80; // 减慢尾部摆动速度
+							this.phi += Math.PI / 80;
 							this.phi %= Math.PI * 2;
 						}
 						this.renderer.generateEpicenter(
 							this.x + (this.direction ? -1 : 1) * this.renderer.THRESHOLD,
 							this.y,
-							(this.y - this.previousY) * 0.5 // 降低鱼触发的水波幅度
+							(this.y - this.previousY) * 0.5
 						);
 
 						if (
@@ -665,43 +740,26 @@
 				this.RENDERER.init();
 			},
 
-			// ========== 原有功能保持不变 ==========
-			// 头像切换功能
-			switchCharacterImage() {
-				this.isImageChanging = true;
-
-				// 切换索引
-				this.currentImageIndex = (this.currentImageIndex + 1) % this.characterImages.length;
-
-				// 动画结束后重置状态
-				setTimeout(() => {
-					this.isImageChanging = false;
-				}, 500);
-			},
-
-			// 轮播相关方法
+			// ========== 轮播相关方法（保持不变） ==========
 			startCarousel() {
 				this.carouselTimer = setInterval(() => {
 					this.nextSlide();
-				}, 6000); // 延长轮播间隔，更舒缓
+				}, 6000);
 			},
 
 			nextSlide() {
-				// 添加过渡动画类
 				const track = this.$refs.carouselContainer?.querySelector('.carousel-track');
 				if (track) track.classList.add('carousel-animate');
 
 				this.currentSlide = (this.currentSlide + 1) % this.carouselImages.length;
 				this.resetCarouselTimer();
 
-				// 动画结束后移除类
 				setTimeout(() => {
 					if (track) track.classList.remove('carousel-animate');
 				}, 800);
 			},
 
 			prevSlide() {
-				// 添加过渡动画类
 				const track = this.$refs.carouselContainer?.querySelector('.carousel-track');
 				if (track) track.classList.add('carousel-animate');
 
@@ -709,7 +767,6 @@
 					(this.currentSlide - 1 + this.carouselImages.length) % this.carouselImages.length;
 				this.resetCarouselTimer();
 
-				// 动画结束后移除类
 				setTimeout(() => {
 					if (track) track.classList.remove('carousel-animate');
 				}, 800);
@@ -736,33 +793,29 @@
 			startQuoteRotation() {
 				this.quoteTimer = setInterval(() => {
 					this.changeQuote();
-				}, 8000); // 延长引用切换间隔
+				}, 8000);
 			},
 
 			changeQuote() {
 				this.isQuoteChanging = true;
 
-				// 切换索引
 				this.currentQuoteIndex = (this.currentQuoteIndex + 1) % this.quotes.length;
 				this.currentQuote = this.quotes[this.currentQuoteIndex];
 
-				// 动画结束后重置状态
 				setTimeout(() => {
 					this.isQuoteChanging = false;
 				}, 800);
 			},
 
-			// 创建粒子效果（优化版）
+			// 创建粒子效果（优化动画）
 			createParticles() {
 				const particlesContainer = this.$refs.particles;
 				if (!particlesContainer) return;
 
-				// 减少粒子数量，更简洁
 				for (let i = 0; i < 30; i++) {
 					const particle = document.createElement('div');
 					particle.className = 'particle';
 
-					// 随机样式 - 优化参数，更柔和
 					const size = Math.random() * 4 + 1;
 					const isCircle = Math.random() > 0.5;
 					particle.style.cssText = `
@@ -772,8 +825,8 @@
 						height: ${size}px;
 						background: ${isCircle ? '#7B61FF' : '#C850C0'};
 						border-radius: ${isCircle ? '50%' : '0'};
-						opacity: ${Math.random() * 0.5 + 0.1}; // 降低不透明度，更柔和
-						animation: particleFloat ${Math.random() * 30 + 20}s infinite linear; // 减慢粒子漂浮速度
+						opacity: ${Math.random() * 0.5 + 0.1};
+						animation: particleFloat ${Math.random() * 30 + 20}s infinite linear;
 						animation-delay: ${Math.random() * 5}s;
 					`;
 
@@ -781,7 +834,7 @@
 				}
 			},
 
-			// 打字机文字动画
+			// 打字机文字动画（优化速度）
 			initTextAnimations() {
 				const subtitle = this.$refs.subtitle;
 				if (!subtitle) return;
@@ -794,24 +847,29 @@
 					if (index < text.length) {
 						subtitle.textContent += text.charAt(index);
 						index++;
-						setTimeout(typeWriter, 150); // 减慢打字机速度
+						setTimeout(typeWriter, 180); // 优化打字速度
 					}
 				};
 
 				setTimeout(typeWriter, 800);
 			},
 
-			// 元素渐入动画
+			// 元素渐入动画（优化时序）
 			initElementAnimations() {
 				// 文字区渐入
 				setTimeout(() => {
 					if (this.$refs.heroText) this.$refs.heroText.classList.add('fade-in');
 				}, 300);
 
+				// 立牌区渐入
+				setTimeout(() => {
+					if (this.$refs.standeeContainer) this.$refs.standeeContainer.classList.add('fade-in');
+				}, 600);
+
 				// 图片区渐入
 				setTimeout(() => {
 					if (this.$refs.heroImage) this.$refs.heroImage.classList.add('fade-in');
-				}, 800);
+				}, 900);
 
 				// 展示区自动显示
 				setTimeout(() => {
@@ -819,20 +877,20 @@
 				}, 1500);
 			},
 
-			// 滚动监听
+			// 滚动监听（优化视差效果）
 			handleScroll() {
 				const scrollTop = window.scrollY;
 				const heroBg = document.querySelector('.hero-bg');
 				const lightEffect = document.querySelector('.light-effect');
 
-				// 背景视差（优化版，更缓慢）
+				// 优化背景视差效果
 				if (heroBg && scrollTop < window.innerHeight) {
-					heroBg.style.transform = `translateY(${scrollTop * 0.08}px)`; // 降低视差幅度
+					heroBg.style.transform = `translateY(${scrollTop * 0.05}px) scale(1.02)`;
 				}
 
-				// 光效跟随
+				// 优化光效淡出
 				if (lightEffect && scrollTop < window.innerHeight) {
-					lightEffect.style.opacity = 1 - scrollTop / (window.innerHeight * 1.5); // 更缓慢的淡出
+					lightEffect.style.opacity = 1 - scrollTop / (window.innerHeight * 2);
 				}
 
 				// 展示区动画
@@ -842,21 +900,21 @@
 				}
 			},
 
-			// 鼠标跟随效果（优化版，更柔和）
+			// 鼠标跟随效果（优化幅度）
 			initMouseFollow() {
 				const heroImage = this.$refs.heroImage;
 				if (!heroImage) return;
 
 				document.addEventListener('mousemove', (e) => {
-					// 降低鼠标跟随幅度，更柔和
-					const x = (e.clientX - window.innerWidth / 2) / 50;
-					const y = (e.clientY - window.innerHeight / 2) / 50;
+					// 优化鼠标跟随幅度，更自然
+					const x = (e.clientX - window.innerWidth / 2) / 60;
+					const y = (e.clientY - window.innerHeight / 2) / 60;
 
 					const characterWrapper = heroImage.querySelector('.character-wrapper');
 					if (characterWrapper && !this.isImageChanging) {
 						characterWrapper.style.transform = `translate(${x}px, ${y}px) rotateY(${
-							x / 3
-						}deg) rotateX(${-y / 3}deg)`; // 降低旋转角度
+							x / 4
+						}deg) rotateX(${-y / 4}deg)`;
 					}
 				});
 			},
@@ -884,7 +942,7 @@
 		min-height: 100vh;
 	}
 
-	/* 英雄区核心样式 */
+	/* 英雄区核心样式（优化动画） */
 	.hero {
 		height: 100vh;
 		position: relative;
@@ -893,7 +951,7 @@
 		align-items: center;
 	}
 
-	/* 动态渐变背景（优化版，更柔和的渐变） */
+	/* 动态渐变背景（全新动画） */
 	.hero-bg {
 		position: absolute;
 		top: 0;
@@ -901,25 +959,27 @@
 		width: 100%;
 		height: 100%;
 		background: linear-gradient(135deg, #0f1642, #2a1659, #411b70);
-		background-size: 300% 300%; /* 减小渐变范围，更稳定 */
-		animation: gradientShift 30s ease infinite; /* 减慢渐变速度 */
-		transition: transform 0.2s ease-out; /* 更平滑的过渡 */
+		background-size: 400% 400%;
+		/* 新增：更流畅的渐变动画 */
+		animation: gradientShift 25s ease infinite alternate;
+		transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 		z-index: 1;
 	}
 
+	/* 优化渐变动画 */
 	@keyframes gradientShift {
 		0% {
-			background-position: 0% 50%;
+			background-position: 0% 0%;
 		}
 		50% {
 			background-position: 100% 50%;
 		}
 		100% {
-			background-position: 0% 50%;
+			background-position: 0% 100%;
 		}
 	}
 
-	/* Canvas小鱼动画容器样式（优化版） */
+	/* Canvas小鱼动画容器样式 */
 	.fish-container {
 		position: absolute;
 		top: 0;
@@ -928,10 +988,10 @@
 		height: 100%;
 		z-index: 2;
 		pointer-events: none;
-		opacity: 0.7; /* 降低不透明度，更融入背景 */
+		opacity: 0.7;
 	}
 
-	/* 粒子效果（优化版） */
+	/* 粒子效果（优化动画） */
 	.particles {
 		position: absolute;
 		top: 0;
@@ -945,37 +1005,90 @@
 	.particle {
 		position: absolute;
 		animation: particleFloat infinite linear;
+		/* 新增：粒子旋转动画 */
+		transform-origin: center center;
 	}
 
+	/* 优化粒子动画 */
 	@keyframes particleFloat {
 		0% {
-			transform: translateY(100vh) rotate(0deg);
+			transform: translateY(100vh) rotate(0deg) scale(0.8);
+			opacity: 0;
+		}
+		10% {
+			opacity: 0.6;
+		}
+		90% {
+			opacity: 0.6;
 		}
 		100% {
-			transform: translateY(-10vh) rotate(360deg);
+			transform: translateY(-10vh) rotate(360deg) scale(1.2);
+			opacity: 0;
 		}
 	}
 
-	/* 光效装饰（优化版，更柔和） */
+	/* 光效装饰（全新呼吸光效） */
 	.light-effect {
 		position: absolute;
 		top: 50%;
 		left: 50%;
-		width: 900px;
-		height: 900px;
+		width: 1000px;
+		height: 1000px;
 		transform: translate(-50%, -50%);
-		background: radial-gradient(circle, rgba(123, 97, 255, 0.15) 0%, rgba(123, 97, 255, 0) 70%);
+		background: radial-gradient(circle, rgba(123, 97, 255, 0.2) 0%, rgba(123, 97, 255, 0) 70%);
 		border-radius: 50%;
 		z-index: 3;
-		transition: opacity 0.8s ease-out; /* 更平滑的过渡 */
+		transition: opacity 1s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+		/* 新增：呼吸动画 */
+		animation: lightBreath 8s ease-in-out infinite;
 	}
 
-	/* 英雄区容器 */
+	/* 新增：呼吸光效动画 */
+	@keyframes lightBreath {
+		0%,
+		100% {
+			transform: translate(-50%, -50%) scale(1);
+			opacity: 0.8;
+		}
+		50% {
+			transform: translate(-50%, -50%) scale(1.1);
+			opacity: 1;
+		}
+	}
+
+	/* 新增：流动光带样式 */
+	.light-streak {
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		z-index: 2;
+		pointer-events: none;
+		background: linear-gradient(90deg, transparent, rgba(123, 97, 255, 0.05), transparent);
+		animation: lightStreak 15s linear infinite;
+	}
+
+	.light-streak-2 {
+		animation-delay: 7.5s;
+		transform: rotate(90deg);
+	}
+
+	@keyframes lightStreak {
+		0% {
+			transform: translateX(-100%);
+		}
+		100% {
+			transform: translateX(100%);
+		}
+	}
+
+	/* 英雄区容器（重构布局） */
 	.hero-container {
 		position: relative;
 		z-index: 10;
 		width: 100%;
-		max-width: 1400px;
+		max-width: 1600px;
 		margin: 0 auto;
 		padding: 0 40px;
 		display: flex;
@@ -983,25 +1096,65 @@
 		justify-content: center;
 	}
 
-	/* 响应式布局 */
-	@media (min-width: 992px) {
+	/* 响应式布局（适配立牌） */
+	@media (min-width: 1200px) {
 		.hero-container {
 			flex-direction: row;
 			align-items: center;
 			justify-content: space-between;
 			height: 100%;
+			gap: 30px;
 		}
-		.hero-text {
-			width: 45%;
+		/* 立牌容器 */
+		.character-standee-container {
+			width: 20%;
 			opacity: 0;
 			transform: translateY(30px);
-			transition: all 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94); /* 更慢的动画 */
+			transition: all 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.2s;
+			height: 70vh;
+			overflow: hidden;
+			position: relative;
+		}
+		.hero-text {
+			width: 30%;
+			opacity: 0;
+			transform: translateY(30px);
+			transition: all 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.4s;
 		}
 		.hero-image {
-			width: 50%;
+			width: 40%;
 			opacity: 0;
 			transform: translateY(50px) scale(0.95);
-			transition: all 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.3s; /* 更慢的动画 */
+			transition: all 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.6s;
+		}
+	}
+
+	@media (max-width: 1199px) and (min-width: 992px) {
+		.hero-container {
+			flex-direction: row;
+			align-items: center;
+			gap: 20px;
+		}
+		.character-standee-container {
+			width: 25%;
+			opacity: 0;
+			transform: translateY(20px);
+			transition: all 1s ease-out 0.2s;
+			height: 60vh;
+			overflow: hidden;
+			position: relative;
+		}
+		.hero-text {
+			width: 35%;
+			opacity: 0;
+			transform: translateY(20px);
+			transition: all 1s ease-out 0.4s;
+		}
+		.hero-image {
+			width: 35%;
+			opacity: 0;
+			transform: translateY(20px);
+			transition: all 1s ease-out 0.6s;
 		}
 	}
 
@@ -1009,17 +1162,21 @@
 		.hero-container {
 			padding: 0 20px;
 		}
+		/* 移动端隐藏立牌 */
+		.character-standee-container {
+			display: none;
+		}
 		.hero-text {
 			opacity: 0;
 			transform: translateY(20px);
-			transition: all 1s ease-out; /* 更平滑的动画 */
+			transition: all 1s ease-out;
 			margin-bottom: 60px;
 			text-align: center;
 		}
 		.hero-image {
 			opacity: 0;
 			transform: translateY(20px);
-			transition: all 1s ease-out 0.3s; /* 更平滑的动画 */
+			transition: all 1s ease-out 0.3s;
 			width: 80%;
 			margin: 0 auto;
 		}
@@ -1031,32 +1188,105 @@
 		transform: translate(0) scale(1) !important;
 	}
 
-	/* 文字区样式 */
+	/* ========== 新增：立牌容器样式 ========== */
+	.standee-track {
+		width: 100%;
+		height: 100%;
+		transition: transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+	}
+
+	.standee-item {
+		width: 100%;
+		height: 100%;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		position: relative;
+	}
+
+	.standee-img {
+		width: 100%;
+		height: 90%;
+		object-fit: cover;
+		border-radius: 10px;
+		box-shadow: 0 15px 35px rgba(123, 97, 255, 0.2);
+		transition: all 0.5s ease;
+	}
+
+	.standee-item.active .standee-img {
+		box-shadow: 0 20px 40px rgba(123, 97, 255, 0.4);
+		transform: scale(1.02);
+	}
+
+	.standee-caption {
+		color: #fff;
+		margin-top: 15px;
+		font-size: 18px;
+		font-weight: 600;
+		text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+		opacity: 0.8;
+	}
+
+	/* 立牌指示器 */
+	.standee-indicators {
+		position: absolute;
+		right: -20px;
+		top: 50%;
+		transform: translateY(-50%);
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
+		z-index: 5;
+	}
+
+	.standee-dot {
+		width: 8px;
+		height: 8px;
+		border-radius: 50%;
+		background: rgba(255, 255, 255, 0.3);
+		cursor: pointer;
+		transition: all 0.3s ease;
+	}
+
+	.standee-dot.active {
+		background: #7b61ff;
+		width: 10px;
+		height: 10px;
+		box-shadow: 0 0 10px rgba(123, 97, 255, 0.8);
+	}
+
+	/* 文字区样式（优化） */
 	.hero-title {
 		font-size: clamp(4rem, 10vw, 7rem);
 		font-weight: 900;
 		color: #ffffff;
 		line-height: 1.1;
 		margin-bottom: 20px;
-		text-shadow: 0 0 20px rgba(123, 97, 255, 0.2); /* 降低阴影强度 */
+		text-shadow: 0 0 30px rgba(123, 97, 255, 0.3);
+		text-align: center;
 	}
 
 	.title-char {
 		display: inline-block;
-		animation: titleFloat 4s ease-in-out infinite; /* 减慢浮动动画 */
+		/* 优化标题浮动动画 */
+		animation: titleFloat 6s ease-in-out infinite;
 	}
 
 	.title-char:nth-child(2) {
-		animation-delay: 0.5s;
+		animation-delay: 0.8s;
 	}
 
 	@keyframes titleFloat {
 		0%,
 		100% {
-			transform: translateY(0);
+			transform: translateY(0) rotate(0deg);
 		}
-		50% {
-			transform: translateY(-8px); /* 减小浮动幅度 */
+		25% {
+			transform: translateY(-10px) rotate(2deg);
+		}
+		75% {
+			transform: translateY(-5px) rotate(-1deg);
 		}
 	}
 
@@ -1065,7 +1295,19 @@
 		color: #e0d7ff;
 		margin-bottom: 25px;
 		letter-spacing: 2px;
-		text-shadow: 0 2px 8px rgba(0, 0, 0, 0.15); /* 降低阴影强度 */
+		text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+		/* 新增：文字发光动画 */
+		animation: textGlow 4s ease-in-out infinite alternate;
+		text-align: center;
+	}
+
+	@keyframes textGlow {
+		0% {
+			text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+		}
+		100% {
+			text-shadow: 0 0 15px rgba(123, 97, 255, 0.5), 0 2px 8px rgba(0, 0, 0, 0.2);
+		}
 	}
 
 	.hero-desc {
@@ -1074,12 +1316,13 @@
 		line-height: 1.8;
 		margin-bottom: 40px;
 		opacity: 0.9;
+		text-align: center;
 	}
 
-	/* 按钮样式 */
+	/* 按钮样式（优化） */
 	.hero-buttons {
 		display: flex;
-		justify-content: flex-start;
+		justify-content: center;
 	}
 
 	@media (max-width: 991px) {
@@ -1095,7 +1338,7 @@
 		font-size: 18px;
 		font-weight: 700;
 		cursor: pointer;
-		transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* 更慢的过渡 */
+		transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 		display: flex;
 		align-items: center;
 		gap: 10px;
@@ -1106,7 +1349,18 @@
 	.btn-primary {
 		background: linear-gradient(90deg, #7b61ff, #c850c0);
 		color: white;
-		box-shadow: 0 10px 30px rgba(123, 97, 255, 0.2); /* 降低阴影强度 */
+		box-shadow: 0 10px 30px rgba(123, 97, 255, 0.3);
+		/* 新增：按钮呼吸效果 */
+		animation: btnBreath 3s ease-in-out infinite alternate;
+	}
+
+	@keyframes btnBreath {
+		0% {
+			box-shadow: 0 10px 30px rgba(123, 97, 255, 0.2);
+		}
+		100% {
+			box-shadow: 0 15px 40px rgba(123, 97, 255, 0.4);
+		}
 	}
 
 	.btn-primary::before {
@@ -1116,13 +1370,13 @@
 		left: -100%;
 		width: 100%;
 		height: 100%;
-		background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
-		transition: all 0.8s ease; /* 减慢流光速度 */
+		background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+		transition: all 1s ease;
 	}
 
 	.btn-primary:hover {
-		transform: translateY(-5px) scale(1.03); /* 减小缩放幅度 */
-		box-shadow: 0 15px 40px rgba(123, 97, 255, 0.3); /* 降低阴影强度 */
+		transform: translateY(-5px) scale(1.03);
+		box-shadow: 0 15px 40px rgba(123, 97, 255, 0.4);
 	}
 
 	.btn-primary:hover::before {
@@ -1132,14 +1386,14 @@
 	.btn-icon {
 		width: 20px;
 		height: 20px;
-		transition: transform 0.4s ease; /* 更慢的过渡 */
+		transition: transform 0.4s ease;
 	}
 
 	.btn:hover .btn-icon {
-		transform: translateX(5px);
+		transform: translateX(5px) rotate(90deg);
 	}
 
-	/* 人物展示区 */
+	/* 人物展示区（优化） */
 	.image-container {
 		position: relative;
 		width: 100%;
@@ -1153,10 +1407,22 @@
 		aspect-ratio: 1/1;
 		border-radius: 50%;
 		overflow: hidden;
-		transition: transform 0.3s ease-out; /* 更慢的过渡 */
+		transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 		transform-style: preserve-3d;
-		box-shadow: 0 20px 60px rgba(123, 97, 255, 0.15); /* 降低阴影强度 */
-		cursor: pointer;
+		box-shadow: 0 20px 60px rgba(123, 97, 255, 0.2);
+		/* 新增：悬浮呼吸效果 */
+		animation: wrapperBreath 6s ease-in-out infinite alternate;
+	}
+
+	@keyframes wrapperBreath {
+		0% {
+			box-shadow: 0 20px 60px rgba(123, 97, 255, 0.15);
+			transform: scale(1);
+		}
+		100% {
+			box-shadow: 0 25px 70px rgba(123, 97, 255, 0.3);
+			transform: scale(1.02);
+		}
 	}
 
 	.character-img {
@@ -1164,34 +1430,37 @@
 		height: 100%;
 		object-fit: cover;
 		transform: translateZ(20px);
-		transition: opacity 0.5s ease, transform 0.5s ease;
+		transition: opacity 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+			transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 	}
 
 	.image-fade {
 		opacity: 0;
-		transform: translateZ(20px) scale(1.05); /* 减小缩放幅度 */
+		transform: translateZ(20px) scale(1.08) rotate(5deg);
 	}
 
-	.click-hint {
+	/* 替换提示文字 */
+	.scroll-hint {
 		position: absolute;
 		bottom: 20px;
 		left: 50%;
 		transform: translateX(-50%);
-		color: rgba(255, 255, 255, 0.6); /* 降低不透明度 */
+		color: rgba(255, 255, 255, 0.7);
 		font-size: 14px;
-		animation: hintPulse 3s ease-in-out infinite; /* 减慢提示动画 */
+		animation: hintPulse 4s ease-in-out infinite;
 		z-index: 5;
+		text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
 	}
 
 	@keyframes hintPulse {
 		0%,
 		100% {
-			opacity: 0.6;
+			opacity: 0.7;
 			transform: translateX(-50%) scale(1);
 		}
 		50% {
-			opacity: 0.9;
-			transform: translateX(-50%) scale(1.03); /* 减小缩放幅度 */
+			opacity: 1;
+			transform: translateX(-50%) scale(1.05);
 		}
 	}
 
@@ -1201,21 +1470,49 @@
 		left: -5px;
 		right: -5px;
 		bottom: -5px;
-		border: 2px solid rgba(123, 97, 255, 0.4); /* 降低边框不透明度 */
+		border: 2px solid rgba(123, 97, 255, 0.5);
 		border-radius: 50%;
-		animation: borderPulse 4s ease-in-out infinite; /* 减慢边框动画 */
+		/* 优化边框动画 */
+		animation: borderRotate 8s linear infinite;
 		transform: translateZ(10px);
 	}
 
-	@keyframes borderPulse {
-		0%,
+	@keyframes borderRotate {
+		0% {
+			transform: translateZ(10px) rotate(0deg);
+			box-shadow: 0 0 20px rgba(123, 97, 255, 0.3);
+		}
 		100% {
-			opacity: 0.4;
-			transform: scale(1) translateZ(10px);
+			transform: translateZ(10px) rotate(360deg);
+			box-shadow: 0 0 30px rgba(123, 97, 255, 0.5);
+		}
+	}
+
+	/* 新增：动态光环 */
+	.character-ring {
+		position: absolute;
+		top: -20px;
+		left: -20px;
+		right: -20px;
+		bottom: -20px;
+		border: 1px solid rgba(123, 97, 255, 0.3);
+		border-radius: 50%;
+		animation: ringPulse 4s ease-in-out infinite;
+		z-index: -1;
+	}
+
+	@keyframes ringPulse {
+		0% {
+			transform: scale(1);
+			opacity: 0.3;
 		}
 		50% {
+			transform: scale(1.05);
 			opacity: 0.8;
-			transform: scale(1.01) translateZ(10px); /* 减小缩放幅度 */
+		}
+		100% {
+			transform: scale(1);
+			opacity: 0.3;
 		}
 	}
 
@@ -1225,19 +1522,21 @@
 		left: -20px;
 		right: -20px;
 		bottom: -20px;
-		background: radial-gradient(circle, rgba(123, 97, 255, 0.2) 0%, rgba(123, 97, 255, 0) 70%);
+		background: radial-gradient(circle, rgba(123, 97, 255, 0.25) 0%, rgba(123, 97, 255, 0) 70%);
 		border-radius: 50%;
 		z-index: -1;
-		animation: glowPulse 6s ease-in-out infinite; /* 减慢光晕动画 */
+		animation: glowPulse 8s ease-in-out infinite;
 	}
 
 	@keyframes glowPulse {
 		0%,
 		100% {
-			opacity: 0.5;
+			opacity: 0.6;
+			transform: scale(1);
 		}
 		50% {
-			opacity: 0.8;
+			opacity: 0.9;
+			transform: scale(1.03);
 		}
 	}
 
@@ -1245,25 +1544,32 @@
 		position: absolute;
 		top: 20%;
 		right: 10%;
-		width: 70px; /* 减小装饰大小 */
+		width: 70px;
 		height: 70px;
 		background: linear-gradient(45deg, #7b61ff, #c850c0);
 		border-radius: 50%;
-		opacity: 0.2; /* 降低不透明度 */
-		animation: decorFloat 8s ease-in-out infinite; /* 减慢装饰动画 */
+		opacity: 0.2;
+		/* 优化装饰动画 */
+		animation: decorFloat 10s ease-in-out infinite;
 	}
 
 	@keyframes decorFloat {
 		0%,
 		100% {
-			transform: translateY(0) rotate(0deg);
+			transform: translateY(0) rotate(0deg) scale(1);
+			opacity: 0.2;
 		}
-		50% {
-			transform: translateY(-15px) rotate(180deg); /* 减小浮动幅度 */
+		25% {
+			transform: translateY(-20px) rotate(90deg) scale(1.1);
+			opacity: 0.3;
+		}
+		75% {
+			transform: translateY(-10px) rotate(270deg) scale(0.9);
+			opacity: 0.25;
 		}
 	}
 
-	/* 滚动提示 */
+	/* 滚动提示（优化） */
 	.scroll-tip {
 		position: absolute;
 		bottom: 50px;
@@ -1272,7 +1578,7 @@
 		z-index: 10;
 		color: white;
 		text-align: center;
-		animation: scrollBounce 3s infinite; /* 减慢滚动提示动画 */
+		animation: scrollBounce 4s infinite ease-in-out;
 	}
 
 	.scroll-icon {
@@ -1294,16 +1600,18 @@
 		height: 10px;
 		background: white;
 		border-radius: 3px;
-		animation: scrollDown 2.5s infinite; /* 减慢滚动图标动画 */
+		animation: scrollDown 3s infinite ease-in-out;
 	}
 
 	@keyframes scrollBounce {
 		0%,
 		100% {
 			transform: translateX(-50%) translateY(0);
+			opacity: 0.8;
 		}
 		50% {
-			transform: translateX(-50%) translateY(-10px); /* 减小弹跳幅度 */
+			transform: translateX(-50%) translateY(-15px);
+			opacity: 1;
 		}
 	}
 
@@ -1313,18 +1621,18 @@
 			opacity: 1;
 		}
 		100% {
-			transform: translateX(-50%) translateY(12px); /* 减小下落距离 */
+			transform: translateX(-50%) translateY(15px);
 			opacity: 0;
 		}
 	}
 
-	/* 展示区样式 */
+	/* 以下样式保持不变 */
 	.showcase-section {
 		padding: 120px 20px;
 		background: #0a0a1a;
 		opacity: 0;
 		transform: translateY(80px);
-		transition: all 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94); /* 更慢的动画 */
+		transition: all 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 	}
 
 	.showcase-section.show {
@@ -1354,14 +1662,13 @@
 		background: linear-gradient(90deg, transparent, #7b61ff, transparent);
 	}
 
-	/* 个人档案模块 */
 	.profile-module {
-		background: rgba(255, 255, 255, 0.02); /* 降低背景不透明度 */
+		background: rgba(255, 255, 255, 0.02);
 		padding: 40px;
 		border-radius: 20px;
 		margin-bottom: 80px;
 		backdrop-filter: blur(10px);
-		border: 1px solid rgba(123, 97, 255, 0.08); /* 降低边框不透明度 */
+		border: 1px solid rgba(123, 97, 255, 0.08);
 	}
 
 	.profile-grid {
@@ -1395,10 +1702,9 @@
 		width: 36px;
 		height: 36px;
 		border-radius: 50%;
-		box-shadow: 0 0 15px rgba(123, 97, 255, 0.4); /* 降低阴影强度 */
+		box-shadow: 0 0 15px rgba(123, 97, 255, 0.4);
 	}
 
-	/* 优化版轮播图样式 */
 	.gallery-module {
 		margin-bottom: 80px;
 	}
@@ -1408,7 +1714,7 @@
 		width: 100%;
 		overflow: hidden;
 		border-radius: 20px;
-		box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2); /* 降低阴影强度 */
+		box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
 		perspective: 1500px;
 	}
 
@@ -1416,13 +1722,12 @@
 		display: flex;
 		width: 100%;
 		height: 500px;
-		transition: transform 0.6s ease-out; /* 更慢的过渡 */
+		transition: transform 0.6s ease-out;
 		transform-style: preserve-3d;
 	}
 
-	/* 轮播动画增强 */
 	.carousel-animate {
-		transition: transform 1s cubic-bezier(0.23, 1, 0.32, 1); /* 更慢的动画 */
+		transition: transform 1s cubic-bezier(0.23, 1, 0.32, 1);
 	}
 
 	.carousel-slide {
